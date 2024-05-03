@@ -7,13 +7,27 @@ public class Level : MonoBehaviour
     private const float CAMERA_ORTHO_SIZE = 50f;
     private const float PIPE_WIDTH = 7.8f;
     private const float PIPE_HEAD_HEIGHT = 3.75f;
-    private const float PIPE_MOVE_SPEED = 3f;
+    private const float PIPE_MOVE_SPEED = 30f;
+    private const float PIPE_SPAWN_X_POSITION = 100f;
     private const float PIPE_DESTROY_X_POSITION = -100f;
 
     private List<Pipe> pipeList;
+    private int pipesSpawned;
+    private float pipeSpawnTimer;
+    private float pipeSpawnTimerMax;
+    private float gapSize;
+
+    public enum Difficulty {
+        Easy,
+        Medium,
+        Hard,
+        Impossible,
+    }
 
     private void Awake() {
         pipeList = new List<Pipe>();
+        pipeSpawnTimerMax = 1f;
+        SetDifficulty(Difficulty.Easy);
     }
 
     private void Start() {
@@ -22,6 +36,31 @@ public class Level : MonoBehaviour
 
     private void Update() {
         HandlePipeMovement();
+        HandlePipeSpawning();
+    }
+
+    private void SetDifficulty(Difficulty difficulty) {
+        switch (difficulty) {
+            case Difficulty.Easy:
+                gapSize = 50f;
+                break;
+            case Difficulty.Medium:
+                gapSize = 40f;
+                break;
+            case Difficulty.Hard:
+                gapSize = 30f;
+                break;
+            case Difficulty.Impossible:
+                gapSize = 20f;
+                break;
+        }
+    }
+
+    private Difficulty GetDifficulty() {
+        if (pipesSpawned >= 50) return Difficulty.Impossible;
+        if (pipesSpawned >= 20) return Difficulty.Hard;
+        if (pipesSpawned >= 10) return Difficulty.Medium;
+        return Difficulty.Easy;
     }
 
     private class Pipe {
@@ -85,16 +124,33 @@ public class Level : MonoBehaviour
     private void CreateGapPipes(float gapY, float gapSize, float xPosition) {
         CreatePipe(gapY - gapSize * .5f, xPosition, true);
         CreatePipe(CAMERA_ORTHO_SIZE * 2f - gapY - gapSize * .5f, xPosition, false);
+        pipesSpawned++;
+        SetDifficulty(GetDifficulty());
+    }
+
+    private void HandlePipeSpawning() {
+        pipeSpawnTimer -= Time.deltaTime;
+        if (pipeSpawnTimer < 0) { 
+            pipeSpawnTimer += pipeSpawnTimerMax;
+
+            float heigtEdgeLimit = 10f;
+            float minHeight = gapSize * .5f + heigtEdgeLimit;
+            float totalHeight = CAMERA_ORTHO_SIZE * 2F;
+            float maxHeight = totalHeight - gapSize * .5f - heigtEdgeLimit;
+            float height = UnityEngine.Random.Range(minHeight, maxHeight);
+
+            CreateGapPipes(height, gapSize, PIPE_SPAWN_X_POSITION);
+        }
     }
 
     private void HandlePipeMovement() {
-        foreach (Pipe pipe in pipeList) {
+        for (int i=0; i<pipeList.Count; i++) {
+            Pipe pipe = pipeList[i];
             pipe.Move();
-            if (pipe.GetXPosition() < PIPE_DESTROY_X_POSITION) {
+            if(pipe.GetXPosition() < PIPE_DESTROY_X_POSITION) { 
                 pipe.DestroySelf();
+                pipeList.Remove(pipe);
             }
         }
-        
     }
 }
-
