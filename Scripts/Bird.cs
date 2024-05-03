@@ -1,3 +1,4 @@
+using CodeMonkey;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -30,6 +31,9 @@ public class Bird : MonoBehaviour
 
     private void Jump() {
         birdRigidbody2D.velocity = Vector2.up * JUMP_AMOUNT;
+    }
 
+    private void OnTriggerEnter2D(Collider2D collision) {
+        CMDebug.TextPopupMouse("Dead!");
     }
 }
