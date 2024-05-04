@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,12 +12,17 @@ public class Level : MonoBehaviour
     private const float PIPE_SPAWN_X_POSITION = 100f;
     private const float PIPE_DESTROY_X_POSITION = -100f;
 
+    private static Level instance;
+
     private List<Pipe> pipeList;
     private int pipesSpawned;
     private float pipeSpawnTimer;
     private float pipeSpawnTimerMax;
     private float gapSize;
 
+    public static Level GetInstance() { 
+        return instance; 
+    }
     public enum Difficulty {
         Easy,
         Medium,
@@ -25,6 +31,7 @@ public class Level : MonoBehaviour
     }
 
     private void Awake() {
+        instance = this;
         pipeList = new List<Pipe>();
         pipeSpawnTimerMax = 1f;
         SetDifficulty(Difficulty.Easy);
@@ -152,5 +159,9 @@ public class Level : MonoBehaviour
                 pipeList.Remove(pipe);
             }
         }
+    }
+
+    public int GetPipesSpawned() {
+        return pipesSpawned; 
     }
 }
