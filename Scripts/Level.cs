@@ -11,10 +11,13 @@ public class Level : MonoBehaviour
     private const float PIPE_MOVE_SPEED = 30f;
     private const float PIPE_SPAWN_X_POSITION = 100f;
     private const float PIPE_DESTROY_X_POSITION = -100f;
+    private const float BIRD_X_POSITION = 0F;
+
 
     private static Level instance;
 
     private List<Pipe> pipeList;
+    private int pipesPassedCound;
     private int pipesSpawned;
     private float pipeSpawnTimer;
     private float pipeSpawnTimerMax;
@@ -74,10 +77,12 @@ public class Level : MonoBehaviour
 
         private Transform pipeHeadTransform;
         private Transform pipeBodyTransform;
+        private bool isBottom;
 
-        public Pipe(Transform pipeHeadTransform, Transform pipeBodyTransform) {
+        public Pipe(Transform pipeHeadTransform, Transform pipeBodyTransform, bool isBottom) {
             this.pipeHeadTransform = pipeHeadTransform;
             this.pipeBodyTransform = pipeBodyTransform;
+            this.isBottom = isBottom;
         }
 
         public void Move() {
@@ -87,6 +92,10 @@ public class Level : MonoBehaviour
 
         public float GetXPosition() {
             return pipeHeadTransform.position.x;
+        }
+
+        public bool IsBottom() {
+            return isBottom;
         }
 
         public void DestroySelf() {
@@ -124,7 +133,7 @@ public class Level : MonoBehaviour
         pipeBodyBoxCollider.size = new Vector2(PIPE_WIDTH, height);
         pipeBodyBoxCollider.offset = new Vector2(0f, height * 0.5f);
 
-        Pipe pipe = new Pipe(pipeHead, pipeBody);
+        Pipe pipe = new Pipe(pipeHead, pipeBody, createBottom);
         pipeList.Add(pipe);
     }
 
@@ -153,7 +162,12 @@ public class Level : MonoBehaviour
     private void HandlePipeMovement() {
         for (int i=0; i<pipeList.Count; i++) {
             Pipe pipe = pipeList[i];
+            bool isToTheRightOfBird = pipe.GetXPosition() > BIRD_X_POSITION;
+            
             pipe.Move();
+            if(isToTheRightOfBird && pipe.GetXPosition() <= BIRD_X_POSITION && pipe.IsBottom()) {
+                pipesPassedCound++;
+            }
             if(pipe.GetXPosition() < PIPE_DESTROY_X_POSITION) { 
                 pipe.DestroySelf();
                 pipeList.Remove(pipe);
@@ -164,4 +178,9 @@ public class Level : MonoBehaviour
     public int GetPipesSpawned() {
         return pipesSpawned; 
     }
+
+    public int GetPipesPassedCount() {
+        return pipesPassedCound;
+    }
+
 }
