@@ -1,13 +1,15 @@
-using JetBrains.Annotations;
 using System.Collections;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
+using CodeMonkey;
+using CodeMonkey.Utils;
 
 public class Level : MonoBehaviour
 {
     private const float CAMERA_ORTHO_SIZE = 50f;
     private const float PIPE_WIDTH = 7.8f;
-    private const float PIPE_HEAD_HEIGHT = 3.75f;
+    private const float PIPE_HEAD_HEIGHT = 3.5f;
     private const float PIPE_MOVE_SPEED = 30f;
     private const float PIPE_SPAWN_X_POSITION = 100f;
     private const float PIPE_DESTROY_X_POSITION = -100f;
@@ -22,6 +24,7 @@ public class Level : MonoBehaviour
     private float pipeSpawnTimer;
     private float pipeSpawnTimerMax;
     private float gapSize;
+    private State state;
 
     public static Level GetInstance() { 
         return instance; 
@@ -33,20 +36,30 @@ public class Level : MonoBehaviour
         Impossible,
     }
 
+    private enum State {
+        WaitingToStart,
+        Playing,
+        BirdDead
+    }
+
     private void Awake() {
         instance = this;
         pipeList = new List<Pipe>();
         pipeSpawnTimerMax = 1f;
         SetDifficulty(Difficulty.Easy);
+        state = State.WaitingToStart;
     }
 
     private void Start() {
-        CreateGapPipes(50f, 20f, 20f);
+        Bird.GetInstance().OnDied += Bird_OnDied;
+        Bird.GetInstance().OnStartedPlaying += Bird_OnStartedPlaying;
     }
 
     private void Update() {
-        HandlePipeMovement();
-        HandlePipeSpawning();
+        if (state == State.Playing) { 
+            HandlePipeMovement();
+            HandlePipeSpawning();
+        }
     }
 
     private void SetDifficulty(Difficulty difficulty) {
@@ -183,4 +196,17 @@ public class Level : MonoBehaviour
         return pipesPassedCound;
     }
 
+    private void Bird_OnStartedPlaying(object sender, System.EventArgs e) {
+        state = State.Playing;
+    }
+
+    private void Bird_OnDied(object sender, System.EventArgs e) {
+        CMDebug.TextPopupMouse("Dead!");
+        state = State.BirdDead;
+
+        FunctionTimer.Create(() => {
+            UnityEngine.SceneManagement.SceneManager.LoadScene("GameScene");
+        }, 1f);
+
+    }
 }
