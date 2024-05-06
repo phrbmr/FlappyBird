@@ -201,12 +201,7 @@ public class Level : MonoBehaviour
     }
 
     private void Bird_OnDied(object sender, System.EventArgs e) {
-        CMDebug.TextPopupMouse("Dead!");
         state = State.BirdDead;
-
-        FunctionTimer.Create(() => {
-            UnityEngine.SceneManagement.SceneManager.LoadScene("GameScene");
-        }, 1f);
-
+        //CMDebug.TextPopupMouse("Dead!");
     }
 }
